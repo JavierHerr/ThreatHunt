@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Threat Hunt Report</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <h1>Threat Hunt Report</h1>
+      <p class="subtitle">A simple project page to present a cybersecurity threat hunt</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Report Information</h2>
+      <div class="grid">
+        <div><strong>Hunt Title:</strong> Suspicious PowerShell Activity Hunt</div>
+        <div><strong>Date:</strong> March 11, 2026</div>
+        <div><strong>Analyst:</strong> Your Name</div>
+        <div><strong>Case ID:</strong> TH-001</div>
+        <div><strong>Classification:</strong> Internal</div>
+        <div><strong>Status:</strong> Completed</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Executive Summary</h2>
+      <p>
+        This threat hunt was conducted to identify suspicious PowerShell execution across enterprise endpoints.
+        The hunt focused on encoded commands, unusual parent-child process relationships, and suspicious outbound
+        network connections. Several suspicious events were identified, but no confirmed active compromise was found
+        within the scoped environment.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Objective</h2>
+      <p>
+        Identify evidence of malicious PowerShell execution, possible payload delivery, and follow-on activity
+        such as persistence or outbound communication.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Hypothesis</h2>
+      <p>
+        Adversaries may be using PowerShell with encoded commands to download and execute payloads while evading
+        traditional signature-based detections.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Scope</h2>
+      <ul>
+        <li><strong>Timeframe:</strong> March 1, 2026 – March 7, 2026</li>
+        <li><strong>Assets:</strong> 2,400 Windows endpoints and 120 servers</li>
+        <li><strong>Users:</strong> Corporate user accounts in production</li>
+        <li><strong>Environment:</strong> Enterprise Windows environment</li>
+        <li><strong>Data Sources:</strong> EDR, Sysmon, DNS logs, proxy logs, SIEM telemetry</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Methodology</h2>
+      <ul>
+        <li>Queried endpoint telemetry for encoded PowerShell execution</li>
+        <li>Reviewed abnormal process lineage such as Office spawning PowerShell</li>
+        <li>Correlated process execution with outbound network connections</li>
+        <li>Reviewed persistence mechanisms including scheduled tasks and registry run keys</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Key Findings</h2>
+
+      <article class="finding">
+        <h3>Finding 1: Encoded PowerShell Execution on WS-1044</h3>
+        <p><strong>Severity:</strong> Medium</p>
+        <p><strong>Confidence:</strong> Moderate</p>
+        <p><strong>Affected Asset:</strong> WS-1044</p>
+        <p>
+          PowerShell was launched from WINWORD.EXE with an encoded command. This was followed by an outbound HTTPS
+          connection to a rare domain not commonly observed in the environment.
+        </p>
+        <p><strong>Assessment:</strong> Suspicious behavior consistent with a phishing-driven execution chain.</p>
+        <p><strong>Status:</strong> Investigated, no persistence confirmed.</p>
+      </article>
+
+      <article class="finding">
+        <h3>Finding 2: Rare External Domain Contact</h3>
+        <p><strong>Severity:</strong> Medium</p>
+        <p><strong>Confidence:</strong> Moderate</p>
+        <p><strong>Affected Asset:</strong> WS-1044</p>
+        <p>
+          Proxy and DNS logs showed communication to a rare external domain shortly after suspicious PowerShell activity.
+        </p>
+        <p><strong>Assessment:</strong> Possible staging or payload retrieval attempt.</p>
+        <p><strong>Status:</strong> Domain blocked for review.</p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>MITRE ATT&CK Mapping</h2>
+      <ul>
+        <li><strong>T1059.001:</strong> PowerShell</li>
+        <li><strong>T1105:</strong> Ingress Tool Transfer</li>
+        <li><strong>T1071.001:</strong> Web Protocols</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Impact Assessment</h2>
+      <p><strong>Risk Level:</strong> Medium</p>
+      <p>
+        Suspicious execution behavior was identified on at least one endpoint. No confirmed lateral movement or data
+        exfiltration was observed within the available telemetry. Risk remains moderate due to limited certainty about
+        initial payload execution intent.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Actions Taken</h2>
+      <ul>
+        <li>Reviewed affected endpoint telemetry</li>
+        <li>Isolated suspicious host for analysis</li>
+        <li>Blocked rare external domain</li>
+        <li>Initiated detection review for Office-to-PowerShell execution</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Recommendations</h2>
+      <ul>
+        <li>Enable PowerShell Script Block Logging across all endpoints</li>
+        <li>Tune alerts for Office spawning PowerShell</li>
+        <li>Expand review of similar rare outbound domains</li>
+        <li>Perform a follow-up hunt for persistence artifacts</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Limitations</h2>
+      <ul>
+        <li>Some endpoints had incomplete command-line logging</li>
+        <li>DNS retention limited long-term visibility</li>
+        <li>Scope did not include all legacy systems</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Conclusion</h2>
+      <p>
+        The threat hunt identified suspicious PowerShell-related activity consistent with possible phishing-based
+        execution. No confirmed enterprise-wide compromise was identified within the defined scope. Additional
+        hardening, visibility improvements, and focused follow-up hunting are recommended.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Threat Hunt Project Page • Built for GitHub Pages</p>
+    </div>
+  </footer>
+</body>
+</html>
