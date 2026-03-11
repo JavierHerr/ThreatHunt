@@ -20,7 +20,7 @@
       <div class="grid">
         <div><strong>Hunt Title:</strong> Azuki Series: Pt 1: Port of Entry</div>
         <div><strong>Date:</strong> March 11, 2026</div>
-        <div><strong>Analyst:</strong> Your Name</div>
+        <div><strong>Analyst:</strong> Javier Herrera</div>
         <div><strong>Case ID:</strong> TH-001</div>
         <div><strong>Classification:</strong> Internal</div>
         <div><strong>Status:</strong> Completed</div>
@@ -30,10 +30,7 @@
     <section class="card">
       <h2>Executive Summary</h2>
       <p>
-        This threat hunt was conducted to identify suspicious PowerShell execution across enterprise endpoints.
-        The hunt focused on encoded commands, unusual parent-child process relationships, and suspicious outbound
-        network connections. Several suspicious events were identified, but no confirmed active compromise was found
-        within the scoped environment.
+        Following the discovery of company supplier contracts and pricing data on underground forums, a threat hunt was initiated to determine the source and scope of the potential compromise. During the investigation, analysts identified evidence of a brute-force authentication attempt targeting enterprise accounts, which resulted in a compromised account that was used by an unauthorized actor to gain access to the internal environment. Once inside the network, the attacker executed PowerShell commands and attempted to move laterally across systems to expand access. Analysis of system and network activity also revealed evidence of data extraction, which is believed to be the likely source of the sensitive supplier contract and pricing information later found on underground forums. The findings confirm unauthorized access, lateral movement attempts, and data exfiltration within the environment, highlighting the need for improved authentication protections, monitoring of administrative tools such as PowerShell, and enhanced detection capabilities to prevent similar incidents in the future.  
       </p>
     </section>
 
@@ -168,4 +165,5 @@
   </footer>
 </body>
 </html>
+
 
