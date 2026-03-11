@@ -30,44 +30,55 @@
     <section class="card">
       <h2>Executive Summary</h2>
       <p>
-        Following the discovery of company supplier contracts and pricing data on underground forums, a threat hunt was initiated to determine the source and scope of the potential compromise. During the investigation, analysts identified evidence of a brute-force authentication attempt targeting enterprise accounts, which resulted in a compromised account that was used by an unauthorized actor to gain access to the internal environment. Once inside the network, the attacker executed PowerShell commands and attempted to move laterally across systems to expand access. Analysis of system and network activity also revealed evidence of data extraction, which is believed to be the likely source of the sensitive supplier contract and pricing information later found on underground forums. The findings confirm unauthorized access, lateral movement attempts, and data exfiltration within the environment, highlighting the need for improved authentication protections, monitoring of administrative tools such as PowerShell, and enhanced detection capabilities to prevent similar incidents in the future.  
+        Following the discovery of company supplier contracts and pricing data on underground forums, a threat hunt was
+        initiated to determine the source and scope of the compromise. Analysis identified a multi-stage intrusion that
+        began with malicious payload delivery from an external IP address, followed by hidden PowerShell execution,
+        credential dumping, lateral movement via RDP, and likely data exfiltration. The attacker used built-in Windows
+        tools such as PowerShell, certutil, cmdkey, mstsc, net, and curl to blend into normal system activity while
+        staging payloads, harvesting credentials, and moving to additional systems. Evidence also indicates that stolen
+        data was collected into an archive and uploaded to a Discord webhook, which is believed to be the mechanism used
+        to exfiltrate sensitive supplier contract and pricing information later found on underground forums. The findings
+        confirm unauthorized access, credential theft, lateral movement, and probable data exfiltration within the
+        environment.
       </p>
     </section>
 
     <section class="card">
       <h2>Objective</h2>
       <p>
-        Identify evidence of malicious PowerShell execution, possible payload delivery, and follow-on activity
-        such as persistence or outbound communication.
+        Identify evidence of malicious script execution, payload delivery, credential theft, lateral movement, and
+        outbound data exfiltration associated with the compromise.
       </p>
     </section>
 
     <section class="card">
       <h2>Hypothesis</h2>
       <p>
-        Adversaries may be using PowerShell with encoded commands to download and execute payloads while evading
-        traditional signature-based detections.
+        Adversaries may be using PowerShell and other built-in Windows tools to download and execute payloads, dump
+        credentials from memory, move laterally across systems using valid accounts, and exfiltrate collected data over
+        common web protocols while evading traditional signature-based detections.
       </p>
     </section>
 
     <section class="card">
       <h2>Scope</h2>
       <ul>
-        <li><strong>Timeframe:</strong> March 1, 2026 – March 7, 2026</li>
-        <li><strong>Assets:</strong> 2,400 Windows endpoints and 120 servers</li>
-        <li><strong>Users:</strong> Corporate user accounts in production</li>
+        <li><strong>Timeframe:</strong> November 19, 2025 – November 20, 2025</li>
+        <li><strong>Assets:</strong> 1 Windows endpoint and 1 internal server confirmed affected</li>
+        <li><strong>Users:</strong> Corporate user accounts and administrative credentials in production</li>
         <li><strong>Environment:</strong> Enterprise Windows environment</li>
-        <li><strong>Data Sources:</strong> EDR, Sysmon, DNS logs, proxy logs, SIEM telemetry</li>
+        <li><strong>Data Sources:</strong> EDR, SIEM telemetry, process execution logs, logon telemetry, file activity, and network telemetry</li>
       </ul>
     </section>
 
     <section class="card">
       <h2>Methodology</h2>
       <ul>
-        <li>Queried endpoint telemetry for encoded PowerShell execution</li>
-        <li>Reviewed abnormal process lineage such as Office spawning PowerShell</li>
-        <li>Correlated process execution with outbound network connections</li>
-        <li>Reviewed persistence mechanisms including scheduled tasks and registry run keys</li>
+        <li>Reviewed endpoint process telemetry for suspicious PowerShell, certutil, cmdkey, mstsc, curl, and net execution</li>
+        <li>Correlated process activity with file creation, registry activity, and network connections</li>
+        <li>Tracked suspicious account usage and remote interactive logons to identify lateral movement</li>
+        <li>Reconstructed the likely attack timeline from payload delivery through exfiltration</li>
+        <li>Mapped observed behavior to MITRE ATT&amp;CK techniques for credential access, remote access, and exfiltration</li>
       </ul>
     </section>
 
@@ -75,85 +86,203 @@
       <h2>Key Findings</h2>
 
       <article class="finding">
-        <h3>Finding 1: Encoded PowerShell Execution on WS-1044</h3>
-        <p><strong>Severity:</strong> Medium</p>
-        <p><strong>Confidence:</strong> Moderate</p>
-        <p><strong>Affected Asset:</strong> WS-1044</p>
+        <h3>Finding 1: Malicious Payload Delivery and Script Execution</h3>
+        <p><strong>Severity:</strong> Critical</p>
+        <p><strong>Confidence:</strong> High</p>
+        <p><strong>Affected Asset:</strong> Initial compromised Windows endpoint</p>
         <p>
-          PowerShell was launched from WINWORD.EXE with an encoded command. This was followed by an outbound HTTPS
-          connection to a rare domain not commonly observed in the environment.
+          PowerShell was used with <code>-ExecutionPolicy Bypass</code> and, in some cases,
+          <code>-WindowStyle Hidden</code> to download and execute files from
+          <code>78.141.196.6:8080</code>. Observed artifacts included
+          <code>wupdate.ps1</code> and <code>wupdate.bat</code> saved to the user's Temp directory.
+          This behavior is consistent with malware staging and execution using built-in scripting tools.
         </p>
-        <p><strong>Assessment:</strong> Suspicious behavior consistent with a phishing-driven execution chain.</p>
-        <p><strong>Status:</strong> Investigated, no persistence confirmed.</p>
+        <p><strong>Assessment:</strong> Confirmed malicious payload delivery and execution.</p>
+        <p><strong>Status:</strong> Confirmed.</p>
       </article>
 
       <article class="finding">
-        <h3>Finding 2: Rare External Domain Contact</h3>
-        <p><strong>Severity:</strong> Medium</p>
-        <p><strong>Confidence:</strong> Moderate</p>
-        <p><strong>Affected Asset:</strong> WS-1044</p>
+        <h3>Finding 2: Secondary Tool Transfer via certutil</h3>
+        <p><strong>Severity:</strong> Critical</p>
+        <p><strong>Confidence:</strong> High</p>
+        <p><strong>Affected Asset:</strong> Initial compromised Windows endpoint</p>
         <p>
-          Proxy and DNS logs showed communication to a rare external domain shortly after suspicious PowerShell activity.
+          The attacker used <code>certutil.exe -urlcache -f</code> to download a file named
+          <code>AdobeGC.exe</code> from <code>78.141.196.6:8080</code> and saved it locally as
+          <code>C:\ProgramData\WindowsCache\mm.exe</code>. The renaming and staging location indicate
+          deliberate use of a trusted Windows binary to retrieve a malicious payload.
         </p>
-        <p><strong>Assessment:</strong> Possible staging or payload retrieval attempt.</p>
-        <p><strong>Status:</strong> Domain blocked for review.</p>
+        <p><strong>Assessment:</strong> Living-off-the-land technique used for malicious tool delivery.</p>
+        <p><strong>Status:</strong> Confirmed.</p>
+      </article>
+
+      <article class="finding">
+        <h3>Finding 3: Credential Dumping via Mimikatz-like Activity</h3>
+        <p><strong>Severity:</strong> Critical</p>
+        <p><strong>Confidence:</strong> High</p>
+        <p><strong>Affected Asset:</strong> Initial compromised Windows endpoint</p>
+        <p>
+          The command <code>"mm.exe" privilege::debug sekurlsa::logonpasswords exit</code> was observed,
+          strongly indicating Mimikatz-style credential dumping from LSASS memory. This would have enabled
+          the attacker to collect plaintext passwords, NTLM hashes, and Kerberos material for additional access.
+        </p>
+        <p><strong>Assessment:</strong> Confirmed credential theft activity.</p>
+        <p><strong>Status:</strong> Confirmed.</p>
+      </article>
+
+      <article class="finding">
+        <h3>Finding 4: Credential Storage and Lateral Movement Preparation</h3>
+        <p><strong>Severity:</strong> High</p>
+        <p><strong>Confidence:</strong> High</p>
+        <p><strong>Affected Asset:</strong> Initial compromised Windows endpoint</p>
+        <p>
+          The attacker used <code>cmdkey.exe /generic:10.1.0.188 /user:fileadmin /pass:**********</code>
+          to store credentials for the internal host <code>10.1.0.188</code>. This is a common precursor
+          to remote authentication and lateral movement using stolen or compromised credentials.
+        </p>
+        <p><strong>Assessment:</strong> Strong evidence of preparation for lateral movement.</p>
+        <p><strong>Status:</strong> Confirmed.</p>
+      </article>
+
+      <article class="finding">
+        <h3>Finding 5: Lateral Movement via Remote Desktop</h3>
+        <p><strong>Severity:</strong> Critical</p>
+        <p><strong>Confidence:</strong> High</p>
+        <p><strong>Affected Asset:</strong> Internal server 10.1.0.188</p>
+        <p>
+          The command <code>mstsc.exe /v:10.1.0.188</code> shows the attacker initiated an RDP session to
+          the internal host <code>10.1.0.188</code>. In context with the preceding <code>cmdkey.exe</code>
+          credential storage activity, this indicates successful or attempted lateral movement into another system.
+        </p>
+        <p><strong>Assessment:</strong> Confirmed remote access attempt consistent with attacker pivoting.</p>
+        <p><strong>Status:</strong> Confirmed.</p>
+      </article>
+
+      <article class="finding">
+        <h3>Finding 6: Privilege Escalation / Account Manipulation</h3>
+        <p><strong>Severity:</strong> High</p>
+        <p><strong>Confidence:</strong> Moderate</p>
+        <p><strong>Affected Asset:</strong> Compromised systems under attacker control</p>
+        <p>
+          The command <code>net.exe localgroup Administrators support</code> was observed in the breach sequence.
+          While the captured command did not include <code>/add</code>, the context suggests investigation into
+          or attempted manipulation of local administrator group membership for the <code>support</code> account.
+        </p>
+        <p><strong>Assessment:</strong> Suspicious behavior consistent with privilege escalation or persistence.</p>
+        <p><strong>Status:</strong> Investigate further.</p>
+      </article>
+
+      <article class="finding">
+        <h3>Finding 7: Data Staging and Exfiltration to Discord</h3>
+        <p><strong>Severity:</strong> Critical</p>
+        <p><strong>Confidence:</strong> High</p>
+        <p><strong>Affected Asset:</strong> Compromised endpoint</p>
+        <p>
+          The attacker used <code>curl.exe</code> to upload
+          <code>C:\ProgramData\WindowsCache\export-data.zip</code> to a Discord webhook. The file name,
+          staging location, and outbound upload pattern strongly indicate collection and exfiltration of
+          data from the victim host to attacker-controlled infrastructure.
+        </p>
+        <p><strong>Assessment:</strong> Confirmed probable data exfiltration.</p>
+        <p><strong>Status:</strong> Confirmed.</p>
       </article>
     </section>
 
     <section class="card">
-      <h2>MITRE ATT&CK Mapping</h2>
+      <h2>Attack Timeline</h2>
+      <ul>
+        <li>PowerShell downloaded <code>wupdate.ps1</code> and <code>wupdate.bat</code> from <code>78.141.196.6:8080</code></li>
+        <li>Downloaded scripts were executed with hidden windows and execution policy bypass</li>
+        <li><code>certutil.exe</code> retrieved an additional payload and saved it as <code>mm.exe</code></li>
+        <li><code>mm.exe</code> was executed with Mimikatz-style credential dumping arguments</li>
+        <li><code>cmdkey.exe</code> stored credentials for <code>10.1.0.188</code></li>
+        <li><code>mstsc.exe</code> was used to open an RDP session to <code>10.1.0.188</code></li>
+        <li><code>net.exe</code> activity suggested possible administrator group interaction involving <code>support</code></li>
+        <li>Data was staged into <code>export-data.zip</code> and uploaded to a Discord webhook using <code>curl.exe</code></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Indicators of Compromise</h2>
+      <ul>
+        <li><strong>External IP:</strong> 78.141.196.6</li>
+        <li><strong>Internal Target:</strong> 10.1.0.188</li>
+        <li><strong>Files:</strong> wupdate.ps1, wupdate.bat, mm.exe, export-data.zip</li>
+        <li><strong>Paths:</strong> <code>C:\Users\KENJI~1.SAT\AppData\Local\Temp\</code>, <code>C:\ProgramData\WindowsCache\</code></li>
+        <li><strong>Accounts:</strong> fileadmin, support</li>
+        <li><strong>Utilities Used:</strong> powershell.exe, certutil.exe, cmdkey.exe, mstsc.exe, net.exe, curl.exe</li>
+        <li><strong>Exfiltration Channel:</strong> Discord webhook</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>MITRE ATT&amp;CK Mapping</h2>
       <ul>
         <li><strong>T1059.001:</strong> PowerShell</li>
         <li><strong>T1105:</strong> Ingress Tool Transfer</li>
-        <li><strong>T1071.001:</strong> Web Protocols</li>
+        <li><strong>T1218:</strong> Signed Binary Proxy Execution / LOLBins</li>
+        <li><strong>T1003.001:</strong> OS Credential Dumping: LSASS Memory</li>
+        <li><strong>T1078:</strong> Valid Accounts</li>
+        <li><strong>T1021.001:</strong> Remote Services: Remote Desktop Protocol</li>
+        <li><strong>T1098:</strong> Account Manipulation</li>
+        <li><strong>T1567:</strong> Exfiltration Over Web Service</li>
       </ul>
     </section>
 
     <section class="card">
       <h2>Impact Assessment</h2>
-      <p><strong>Risk Level:</strong> Medium</p>
+      <p><strong>Risk Level:</strong> Critical</p>
       <p>
-        Suspicious execution behavior was identified on at least one endpoint. No confirmed lateral movement or data
-        exfiltration was observed within the available telemetry. Risk remains moderate due to limited certainty about
-        initial payload execution intent.
+        The investigation identified confirmed malicious execution, credential dumping, likely compromise of valid
+        accounts, lateral movement to at least one additional host, and probable exfiltration of sensitive data.
+        Based on the observed behavior, the environment should be treated as actively compromised, with potential
+        impact to authentication systems, internal servers, and confidential business information.
       </p>
     </section>
 
     <section class="card">
       <h2>Actions Taken</h2>
       <ul>
-        <li>Reviewed affected endpoint telemetry</li>
-        <li>Isolated suspicious host for analysis</li>
-        <li>Blocked rare external domain</li>
-        <li>Initiated detection review for Office-to-PowerShell execution</li>
+        <li>Reviewed suspicious endpoint and server telemetry</li>
+        <li>Identified malicious use of PowerShell, certutil, cmdkey, mstsc, net, and curl</li>
+        <li>Tracked attacker movement from the initial host to internal system <code>10.1.0.188</code></li>
+        <li>Documented indicators including IPs, files, accounts, and exfiltration method</li>
+        <li>Confirmed likely data theft via Discord webhook upload</li>
       </ul>
     </section>
 
     <section class="card">
       <h2>Recommendations</h2>
       <ul>
-        <li>Enable PowerShell Script Block Logging across all endpoints</li>
-        <li>Tune alerts for Office spawning PowerShell</li>
-        <li>Expand review of similar rare outbound domains</li>
-        <li>Perform a follow-up hunt for persistence artifacts</li>
+        <li>Immediately isolate affected endpoints and the internal host <code>10.1.0.188</code></li>
+        <li>Reset passwords for impacted accounts, especially <code>fileadmin</code>, <code>support</code>, and any accounts exposed to LSASS dumping</li>
+        <li>Block communications to <code>78.141.196.6</code> and the identified Discord webhook infrastructure</li>
+        <li>Review and restrict RDP access, especially for privileged accounts</li>
+        <li>Enable and retain PowerShell Script Block Logging and full command-line logging</li>
+        <li>Hunt across the enterprise for <code>wupdate.ps1</code>, <code>wupdate.bat</code>, <code>mm.exe</code>, and <code>export-data.zip</code></li>
+        <li>Review local administrator group membership and remove unauthorized accounts</li>
+        <li>Develop or tune detections for credential dumping, LOLBin abuse, Discord webhook uploads, and suspicious PowerShell download activity</li>
       </ul>
     </section>
 
     <section class="card">
       <h2>Limitations</h2>
       <ul>
-        <li>Some endpoints had incomplete command-line logging</li>
-        <li>DNS retention limited long-term visibility</li>
-        <li>Scope did not include all legacy systems</li>
+        <li>Some command context was inferred from observed process arguments rather than full forensic images</li>
+        <li>Not all endpoint history outside the defined timeframe was available for review</li>
+        <li>The exact contents of <code>export-data.zip</code> were not validated in the provided evidence set</li>
+        <li>Account manipulation involving <code>support</code> requires additional confirmation from group membership and account creation telemetry</li>
       </ul>
     </section>
 
     <section class="card">
       <h2>Conclusion</h2>
       <p>
-        The threat hunt identified suspicious PowerShell-related activity consistent with possible phishing-based
-        execution. No confirmed enterprise-wide compromise was identified within the defined scope. Additional
-        hardening, visibility improvements, and focused follow-up hunting are recommended.
+        The threat hunt confirmed a serious compromise involving malicious payload delivery, hidden PowerShell execution,
+        credential dumping, lateral movement through RDP, and probable data exfiltration. The observed sequence reflects
+        a hands-on-keyboard intrusion using legitimate Windows utilities to reduce detection and expand access. Immediate
+        containment, credential rotation, and enterprise-wide hunting are recommended to prevent further attacker activity
+        and identify any additional affected systems.
       </p>
     </section>
   </main>
@@ -165,5 +294,3 @@
   </footer>
 </body>
 </html>
-
-
