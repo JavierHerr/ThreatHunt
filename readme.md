@@ -1,87 +1,26 @@
-* {
-  box-sizing: border-box;
-}
+# Threat Hunt Project Page
 
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.6;
-  background: #0f172a;
-  color: #e5e7eb;
-}
+A simple static website to present a cybersecurity threat hunt report using GitHub Pages.
 
-.container {
-  width: min(1000px, 92%);
-  margin: 0 auto;
-}
+## Files
 
-.hero {
-  background: linear-gradient(135deg, #111827, #1e293b);
-  padding: 60px 0 40px;
-  border-bottom: 1px solid #334155;
-}
+- `index.html` — main report page
+- `styles.css` — page styling
 
-.hero h1 {
-  margin: 0;
-  font-size: 2.5rem;
-  color: #f8fafc;
-}
+## Run locally
 
-.subtitle {
-  margin-top: 10px;
-  color: #94a3b8;
-  font-size: 1.1rem;
-}
+Open `index.html` in your browser.
 
-main {
-  padding: 30px 0 50px;
-}
+## Publish with GitHub Pages
 
-.card {
-  background: #111827;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 24px;
-  margin-bottom: 22px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-}
+1. Create a new GitHub repository
+2. Upload `index.html` and `styles.css`
+3. Go to **Settings**
+4. Open **Pages**
+5. Under **Build and deployment**, choose:
+   - **Source:** Deploy from a branch
+   - **Branch:** `main`
+   - **Folder:** `/root`
+6. Save
 
-.card h2 {
-  margin-top: 0;
-  color: #38bdf8;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
-}
-
-.finding {
-  border-top: 1px solid #334155;
-  padding-top: 18px;
-  margin-top: 18px;
-}
-
-.finding:first-of-type {
-  border-top: none;
-  padding-top: 0;
-  margin-top: 0;
-}
-
-.finding h3 {
-  color: #f8fafc;
-  margin-bottom: 10px;
-}
-
-ul {
-  padding-left: 20px;
-}
-
-.footer {
-  border-top: 1px solid #334155;
-  padding: 20px 0;
-  text-align: center;
-  color: #94a3b8;
-  background: #111827;
-}
+Your site will be published on a GitHub Pages URL.
